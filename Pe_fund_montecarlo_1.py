@@ -270,6 +270,7 @@ def assumption_widget(key, title, icon,
             fig.add_trace(go.Histogram(
                 x=draws_cl, nbinsx=60,
                 marker_color="#58a6ff", opacity=0.8,
+                marker_line=dict(color="#1a5fa8", width=0.5),
                 histnorm="probability density",
             ))
             # P10 / median / P90 lines
@@ -770,6 +771,7 @@ with col_A:
         _fig.add_trace(go.Histogram(
             x=_draws, nbinsx=50,
             marker_color="#f0883e", opacity=0.8,
+            marker_line=dict(color="#b85e1a", width=0.5)
             histnorm="probability density",
         ))
         _fig.add_vline(x=_mean_ref, line_dash="dash", line_color="#3fb950",
