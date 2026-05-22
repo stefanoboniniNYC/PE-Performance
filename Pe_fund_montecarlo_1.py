@@ -1,5 +1,5 @@
 """
-PE Fund Monte Carlo Simulator â Streamlit App
+PE Fund Monte Carlo Simulator - Streamlit App
 All assumptions (structural + stochastic) support full distribution choice.
 """
 
@@ -111,7 +111,7 @@ DIST_PARAMS = {
     "Uniform":    [("min", "Min"), ("max", "Max")],
     "Normal":     [("mean", "Mean"), ("std", "Std Dev")],
     "Log-Normal": [("mean", "Mean (arith.)"), ("std", "Std Dev (arith.)")],
-    "Beta":       [("alpha", "Alpha (Î±)"), ("beta", "Beta (Î²)"),
+    "Beta":       [("alpha", "Alpha (alpha)"), ("beta", "Beta (beta)"),
                    ("min", "Min (scale lo)"), ("max", "Max (scale hi)")],
 }
 
@@ -185,9 +185,9 @@ def dist_label(dist, params):
     elif dist == "Uniform":
         return f"Uniform({params['min']:.3g}, {params['max']:.3g})"
     elif dist in ("Normal", "Log-Normal"):
-        return f"{dist}(ÎŒ={params['mean']:.3g}, Ï={params['std']:.3g})"
+        return f"{dist}(mu={params['mean']:.3g}, sd={params['std']:.3g})"
     elif dist == "Beta":
-        return f"Beta(Î±={params['alpha']:.3g}, Î²={params['beta']:.3g}) [{params['min']:.3g}, {params['max']:.3g}]"
+        return f"Beta(alpha={params['alpha']:.3g}, beta={params['beta']:.3g}) [{params['min']:.3g}, {params['max']:.3g}]"
     return dist
 
 
@@ -304,7 +304,7 @@ def assumption_widget(key, title, icon,
 def _irr(cfs, guess=0.10, tol=1e-10, maxiter=2000):
     """Newton-Raphson IRR. Returns nan if no solution found."""
     cf = np.asarray(cfs, dtype=float)
-    # Quick sign check â need at least one sign change
+    # Quick sign check - need at least one sign change
     if not (np.any(cf > 0) and np.any(cf < 0)):
         return float("nan")
     r = guess
@@ -528,13 +528,13 @@ def simulate_one(fund_size, mgmt_fee, carry, hurdle, inv_pct,
     # C62: LP MoM = total LP dist / fund_size
     lp_mom = total_lp_dist / fund_size if fund_size > 0 else float("nan")
 
-    # C63: LP IRR Zero = IRR(C46:N46) â distributions only (no subtraction of contributions)
+    # C63: LP IRR Zero = IRR(C46:N46) - distributions only (no subtraction of contributions)
     lp_irr_zero = _irr(lp_dist)
 
-    # C64: LP IRR Calendar = IRR(D48:N48) â net LP CFs, annual (years 1-11)
+    # C64: LP IRR Calendar = IRR(D48:N48) - net LP CFs, annual (years 1-11)
     lp_irr_cal = _irr(net_lp[1:])
 
-    # C65: MIRR zero = MIRR(C46:M46, 4%, market_ret)  â LP dist years 0-10
+    # C65: MIRR zero = MIRR(C46:M46, 4%, market_ret)  - LP dist years 0-10
     lp_mirr_zero = _mirr(lp_dist[:11], 0.04, market_ret)
 
     # C66: MIRR calendar = MIRR(D48:N48, 4%, market_ret)
@@ -592,7 +592,7 @@ def simulate_one(fund_size, mgmt_fee, carry, hurdle, inv_pct,
 
 def run_mc(n_sims, assumption_draws, inv_std_pct, seed):
     """
-    Run Monte Carlo. assumption_draws: dict name â pre-drawn array of length n_sims
+    Run Monte Carlo. assumption_draws: dict name -> pre-drawn array of length n_sims
     (mult and dur are length n_sims*5, one draw per cohort per sim).
     """
     np.random.seed(seed)
@@ -630,7 +630,7 @@ st.markdown("""
     PE Fund Monte Carlo Simulator
   </h1>
   <p style="color:#8b949e;margin:6px 0 0;font-size:13px;">
-    European-style waterfall Â· Catch-up Â· Every assumption configurable as Fixed or any stochastic distribution
+    European-style waterfall - Catch-up - Every assumption configurable as Fixed or any stochastic distribution
   </p>
 </div>
 """, unsafe_allow_html=True)
@@ -646,8 +646,8 @@ seed   = cfg2.number_input(
     value=42, min_value=0,
     help=(
         "Fixes the random number generator so results are reproducible. "
-        "Run twice with the same seed â identical numbers. "
-        "Change one assumption and keep the seed fixed â any output change "
+        "Run twice with the same seed -> identical numbers. "
+        "Change one assumption and keep the seed fixed -> any output change "
         "is purely from your assumption, not from randomness. "
         "Leave it at 42 unless you want to check stability across different draws."
     ),
@@ -656,7 +656,7 @@ seed   = cfg2.number_input(
 st.markdown("---")
 
 # âââââââââââââââââââââââââââââââââââââââââââââ
-# ASSUMPTION CONFIGURATORS â two columns of cards
+# ASSUMPTION CONFIGURATORS - two columns of cards
 # âââââââââââââââââââââââââââââââââââââââââââââ
 
 st.markdown('<div class="section-hdr">Monte Carlo Assumptions</div>', unsafe_allow_html=True)
@@ -671,7 +671,7 @@ with col_A:
     # 1. Fund Size
     with st.container(border=True):
         fs_dist, fs_params = assumption_widget(
-            key="fund_size", title="Fund Size (â¬M)", icon="ð°",
+            key="fund_size", title="Fund Size (EUR M)", icon="ð°",
             default_dist="Triangular",
             defaults_by_dist={
                 "Fixed":      {"value": 300.0},
@@ -682,7 +682,7 @@ with col_A:
                 "Log-Normal": {"mean": 300.0, "std": 80.0},
                 "Beta":       {"alpha": 2.0, "beta": 2.0, "min": 100.0, "max": 500.0},
             },
-            fmt="%.1f", preview_xlabel="â¬M",
+            fmt="%.1f", preview_xlabel="EUR M",
         )
 
     # 2. Management Fee
@@ -756,7 +756,7 @@ with col_A:
     # 6. Annual Deployment Variability
     with st.container(border=True):
         st.markdown(
-            '<div class="assump-title">ð² Annual Deployment Variability'
+            '<div class="assump-title">Annual Deployment Variability'
             ' &nbsp;<span class="assump-badge badge-stoch">Stochastic</span></div>',
             unsafe_allow_html=True,
         )
@@ -765,10 +765,10 @@ with col_A:
             min_value=0, max_value=80, value=20, step=5,
             format="%d%%",
             help=(
-                "Each year's investment amount is drawn from Normal(mean, mean Ã this%). "
-                "Mean = Fund Size Ã Investable% Ã· 5. "
+                "Each year's investment amount is drawn from Normal(mean, mean x this%). "
+                "Mean = Fund Size x Investable% / 5. "
                 "At 0% all years are identical (flat pacing). "
-                "At 20% roughly two-thirds of years land within Â±20% of the mean. "
+                "At 20% roughly two-thirds of years land within +/-20% of the mean. "
                 "At 40% pacing is highly uneven."
             ),
         ) / 100.0
@@ -782,11 +782,11 @@ with col_A:
         _hi_ref   = _mean_ref * (1 + inv_std_pct)
         st.caption(
             f"At current fund size / investable% settings: "
-            f"mean â **â¬{_mean_ref:.0f}M/yr**,  "
-            f"Â±1 std dev range â â¬{_lo_ref:.0f}M â â¬{_hi_ref:.0f}M"
+            f"mean ~ EUR {_mean_ref:.0f}M/yr,  "
+            f"+/-1 std dev range ~ EUR {_lo_ref:.0f}M to EUR {_hi_ref:.0f}M"
         )
 
-        # Mini preview: show Â±1Ï band on a normal curve
+        # Mini preview: show +/-1sd band on a normal curve
         _draws = np.maximum(0, np.random.normal(_mean_ref, _mean_ref * inv_std_pct, 5000)) \
                  if inv_std_pct > 0 else np.full(5000, _mean_ref)
         _fig = go.Figure()
@@ -796,26 +796,26 @@ with col_A:
             histnorm="probability density",
         ))
         _fig.add_vline(x=_mean_ref, line_dash="dash", line_color="#3fb950",
-                       annotation_text=f"Mean â¬{_mean_ref:.0f}M",
+                       annotation_text=f"Mean EUR{_mean_ref:.0f}M",
                        annotation_font_size=9, annotation_position="top right")
         _fig.add_vline(x=_lo_ref, line_dash="dot", line_color="#8c959f",
-                       annotation_text=f"â1Ï â¬{_lo_ref:.0f}M",
+                       annotation_text=f"-1sd EUR{_lo_ref:.0f}M",
                        annotation_font_size=9, annotation_position="top left")
         _fig.add_vline(x=_hi_ref, line_dash="dot", line_color="#8c959f",
-                       annotation_text=f"+1Ï â¬{_hi_ref:.0f}M",
+                       annotation_text=f"+1sd EUR{_hi_ref:.0f}M",
                        annotation_font_size=9, annotation_position="top right")
         _fig.update_layout(
             height=150,
             margin=dict(t=10, b=20, l=30, r=10),
             paper_bgcolor="white", plot_bgcolor="#f6f8fa",
             font=dict(family="IBM Plex Sans", size=10),
-            xaxis=dict(title="Annual deployment (â¬M)", title_font_size=10),
+            xaxis=dict(title="Annual deployment (EUR M)", title_font_size=10),
             yaxis=dict(title="", showticklabels=False),
             showlegend=False,
         )
         st.plotly_chart(_fig, use_container_width=True, config={"displayModeBar": False})
         st.markdown(
-            f'<div class="prev-label">Normal(mean, mean Ã {inv_std_pct*100:.0f}%), clipped at 0</div>',
+            f'<div class="prev-label">Normal(mean, mean x {inv_std_pct*100:.0f}%), clipped at 0</div>',
             unsafe_allow_html=True
         )
 
@@ -843,7 +843,7 @@ with col_B:
     # 7. Investment Duration
     with st.container(border=True):
         du_dist, du_params = assumption_widget(
-            key="dur", title="Investment Duration (years per deal)", icon="â±ïž",
+            key="dur", title="Investment Duration (years per deal)", icon="[dur]",
             default_dist="Uniform",
             defaults_by_dist={
                 "Fixed":      {"value": 3.0},
@@ -881,10 +881,10 @@ with col_B:
 
 st.markdown("---")
 run_col, info_col = st.columns([1, 5])
-run_btn = run_col.button("â¶  Run Simulation", type="primary", use_container_width=True)
+run_btn = run_col.button("Run Simulation", type="primary", use_container_width=True)
 info_col.markdown(
     f"<span style='font-size:13px;color:#656d76;'>"
-    f"Will run <b>{n_sims:,}</b> scenarios Â· every assumption drawn independently per path</span>",
+    f"Will run <b>{n_sims:,}</b> scenarios - every assumption drawn independently per path</span>",
     unsafe_allow_html=True,
 )
 
@@ -895,12 +895,12 @@ info_col.markdown(
 if run_btn or "mc_results" in st.session_state:
 
     if run_btn:
-        with st.spinner(f"Sampling distributions and running {n_sims:,} scenariosâŠ"):
+        with st.spinner(f"Sampling distributions and running {n_sims:,} scenarios..."):
             np.random.seed(int(seed))
 
             # Pre-draw all assumption samples
             # scalar assumptions: n_sims draws each
-            # mult & dur: n_sims Ã 5 draws (one per cohort per sim)
+            # mult & dur: n_sims x 5 draws (one per cohort per sim)
             draws = {
                 "fund_size": sample_dist(fs_dist, fs_params, n_sims),
                 "mgmt_fee":  sample_dist(mf_dist, mf_params, n_sims),
@@ -950,7 +950,7 @@ if run_btn or "mc_results" in st.session_state:
             f'</div>', unsafe_allow_html=True
         )
 
-    kpi(k1, "LP MoM (C62)",      f"{mom.median():.2f}Ã",
+    kpi(k1, "LP MoM (C62)",      f"{mom.median():.2f}x",
         f"P10: {mom.quantile(.1):.2f}  P90: {mom.quantile(.9):.2f}")
     kpi(k2, "LP IRR Zero (C63)", f"{irr_zero.median():.1f}%",
         f"P10: {irr_zero.quantile(.1):.1f}%  P90: {irr_zero.quantile(.9):.1f}%")
@@ -958,7 +958,7 @@ if run_btn or "mc_results" in st.session_state:
         f"P10: {irr_cal.quantile(.1):.1f}%  P90: {irr_cal.quantile(.9):.1f}%")
     kpi(k4, "MIRR Zero (C65)",   f"{mirr_zero.median():.1f}%",
         f"P10: {mirr_zero.quantile(.1):.1f}%  P90: {mirr_zero.quantile(.9):.1f}%")
-    kpi(k5, "MoM @ MIRR (C67)",  f"{mirr_mom_s.median():.2f}Ã",
+    kpi(k5, "MoM @ MIRR (C67)",  f"{mirr_mom_s.median():.2f}x",
         f"P10: {mirr_mom_s.quantile(.1):.2f}  P90: {mirr_mom_s.quantile(.9):.2f}")
     kpi(k6, "% Beats Market",    f"{beats_pct:.0f}%", "LP MoM > PME MoM")
 
@@ -984,18 +984,18 @@ if run_btn or "mc_results" in st.session_state:
 
     c1, c2, c3 = st.columns(3)
     with c1:
-        st.plotly_chart(hist_fig(mom, "#58a6ff", "LP MoM (C62)", "MoM (Ã)",
-            [(mom.median(), "dash", f"Median {mom.median():.2f}Ã", "top right"),
-             (1.0, "dot", "1.0Ã breakeven", "top left")]),
+        st.plotly_chart(hist_fig(mom, "#58a6ff", "LP MoM (C62)", "MoM (x)",
+            [(mom.median(), "dash", f"Median {mom.median():.2f}x", "top right"),
+             (1.0, "dot", "1.0x breakeven", "top left")]),
             use_container_width=True)
     with c2:
         st.plotly_chart(hist_fig(irr_zero, "#3fb950", "LP IRR Zero (C63)", "IRR (%)",
             [(irr_zero.median(), "dash", f"Median {irr_zero.median():.1f}%", "top right")]),
             use_container_width=True)
     with c3:
-        st.plotly_chart(hist_fig(mirr_mom_s, "#8957e5", "MoM @ MIRR (C67)", "MoM (Ã)",
-            [(mirr_mom_s.median(), "dash", f"Median {mirr_mom_s.median():.2f}Ã", "top right"),
-             (1.0, "dot", "1.0Ã", "top left")]),
+        st.plotly_chart(hist_fig(mirr_mom_s, "#8957e5", "MoM @ MIRR (C67)", "MoM (x)",
+            [(mirr_mom_s.median(), "dash", f"Median {mirr_mom_s.median():.2f}x", "top right"),
+             (1.0, "dot", "1.0x", "top left")]),
             use_container_width=True)
 
     c4, c5 = st.columns(2)
@@ -1024,17 +1024,17 @@ if run_btn or "mc_results" in st.session_state:
         for pv, pc, pl in [(.10,"#f78166","P10"),(.50,"#3fb950","P50"),(.90,"#8957e5","P90")]:
             v = np.quantile(s_mom, pv)
             fig_cdf.add_vline(x=v, line_dash="dot", line_color=pc,
-                              annotation_text=f"{pl}: {v:.2f}Ã",
+                              annotation_text=f"{pl}: {v:.2f}x",
                               annotation_font_size=9, annotation_position="top right")
-        fig_cdf.update_layout(title="LP MoM â CDF",
-            xaxis_title="LP MoM (Ã)", yaxis_title="Cumulative %",
+        fig_cdf.update_layout(title="LP MoM - CDF",
+            xaxis_title="LP MoM (x)", yaxis_title="Cumulative %",
             height=300, margin=dict(t=45, b=35, l=35, r=10),
             paper_bgcolor="white", plot_bgcolor="#f6f8fa",
             font=dict(family="IBM Plex Sans"), showlegend=False)
         st.plotly_chart(fig_cdf, use_container_width=True)
 
     # ââ Full percentile table ââ
-    st.markdown('<div class="section-hdr">Percentile Statistics â All Forecasts</div>',
+    st.markdown('<div class="section-hdr">Percentile Statistics - All Forecasts</div>',
                 unsafe_allow_html=True)
 
     pcts = [5, 10, 25, 50, 75, 90, 95]
@@ -1091,27 +1091,27 @@ if run_btn or "mc_results" in st.session_state:
         )
 
     stat_card(s1, "LP Returns", {
-        "Mean MoM (C62)":       f"{mom.mean():.3f}Ã",
-        "Median MoM":           f"{mom.median():.3f}Ã",
-        "Std Dev MoM":          f"{mom.std():.3f}Ã",
+        "Mean MoM (C62)":       f"{mom.mean():.3f}x",
+        "Median MoM":           f"{mom.median():.3f}x",
+        "Std Dev MoM":          f"{mom.std():.3f}x",
         "Sharpe-like (C80)":    f"{mom.mean()/mom.std():.2f}",
         "Mean IRR Zero (C63)":  f"{irr_zero.mean():.1f}%",
         "Mean IRR Cal (C64)":   f"{irr_cal.mean():.1f}%",
         "Mean MIRR Zero (C65)": f"{mirr_zero.mean():.1f}%",
         "Mean MIRR Cal (C66)":  f"{mirr_cal.mean():.1f}%",
-        "P(Loss < 1Ã)":         f"{(mom < 1).mean()*100:.1f}%",
+        "P(Loss < 1x)":         f"{(mom < 1).mean()*100:.1f}%",
     })
     stat_card(s2, "Market Comparison", {
         "% Beats Mkt MoM (C77)":   f"{beats_pct:.1f}%",
         "% Beats Mkt MIRR (C77d)": f"{df['beats_market_mirr'].mean()*100:.1f}%",
-        "Median Excess MoM (C78)": f"{s('excess_mom').median():.3f}Ã",
-        "Median Excess MIRR":      f"{s('excess_mom_mirr').median():.3f}Ã",
-        "Median PME MoM (C74)":    f"{s('mkt_mom').median():.3f}Ã",
+        "Median Excess MoM (C78)": f"{s('excess_mom').median():.3f}x",
+        "Median Excess MIRR":      f"{s('excess_mom_mirr').median():.3f}x",
+        "Median PME MoM (C74)":    f"{s('mkt_mom').median():.3f}x",
         "Mean Fund Life (C51)":    f"{fl_vals.mean():.1f} yrs",
     })
     stat_card(s3, "Fund & Config", {
-        "Mean Fund MoM (C59)":  f"{fund_mom_s.mean():.3f}Ã",
-        "Mean Fund DPI (C69)":  f"{fund_dpi_s.mean():.3f}Ã",
+        "Mean Fund MoM (C59)":  f"{fund_mom_s.mean():.3f}x",
+        "Mean Fund DPI (C69)":  f"{fund_dpi_s.mean():.3f}x",
         "N simulations":        f"{n_sims:,}",
         "Fund size dist":       fs_dist,
         "Multiplier dist":      mu_dist,
@@ -1121,7 +1121,7 @@ if run_btn or "mc_results" in st.session_state:
     st.markdown("---")
     st.markdown(
         "<p style='font-size:11px;color:#8c959f'>"
-        "All metrics (C59âC81) replicate the Excel model exactly. "
+        "All metrics (C59-C81) replicate the Excel model exactly. "
         "IRR Zero = from fund inception (C46:N46). "
         "IRR Calendar = from first call (D48:N48). "
         "MIRR uses 4% finance rate and realised market return as reinvestment rate.</p>",
