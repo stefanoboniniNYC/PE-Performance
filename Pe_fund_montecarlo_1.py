@@ -603,10 +603,10 @@ def run_mc(n_sims, assumption_draws, inv_std_pct, seed):
 
 st.markdown("""
 <div style="background:#0d1117;padding:22px 32px;border-radius:10px;margin-bottom:24px;">
-  <h1 style="color:#58a6ff;font-family:'IBM Plex Mono',monospace;margin:0;font-size:32px;letter-spacing:-.5px;">
+  <h1 style="color:#a2e8e5;font-family:'IBM Plex Mono',monospace;margin:0;font-size:28px;letter-spacing:-.5px;">
     Private Equity Returns Simulator 
   </h1>
-  <p style="color:#8b949e;margin:6px 0 0;font-size:13px;">
+  <p style="color:#dce7f2;margin:6px 0 0;font-size:14px;">
     This simulator builds on the paper "Private Equity Returns: Estimates from 50 Million Funds" by Stefano Bonini | Every assumption configurable as Fixed or stochastic
   </p>
 </div>
