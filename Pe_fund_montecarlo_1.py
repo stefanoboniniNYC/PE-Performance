@@ -771,7 +771,7 @@ with col_A:
         _fig.add_trace(go.Histogram(
             x=_draws, nbinsx=50,
             marker_color="#f0883e", opacity=0.8,
-            marker_line=dict(color="#b85e1a", width=0.5)
+            marker_line=dict(color="#b85e1a", width=0.5),
             histnorm="probability density",
         ))
         _fig.add_vline(x=_mean_ref, line_dash="dash", line_color="#3fb950",
