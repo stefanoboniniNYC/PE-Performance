@@ -248,14 +248,18 @@ def assumption_widget(key, title, icon,
             draws = draws * 100  # show as %
 
         if dist == "Fixed":
-            # single vertical line, no histogram
+            # single vertical line: set a tight window around the value
+            v0 = float(draws[0])
+            pad = max(abs(v0) * 0.3, 0.5)
             fig = go.Figure()
-            fig.add_vline(x=float(draws[0]), line_width=2.5, line_color="#58a6ff")
-            fig.add_annotation(x=float(draws[0]), y=0.5, text=f"{draws[0]:.3g}",
+            fig.add_vline(x=v0, line_width=2.5, line_color="#58a6ff")
+            fig.add_annotation(x=v0, y=0.5, text=f"{v0:.3g}",
                                showarrow=False, yref="paper",
                                font=dict(size=13, family="IBM Plex Mono", color="#0d1117"))
+            x_range = [v0 - pad, v0 + pad]
         else:
             fig = go.Figure()
+            # Clip to data range (use min/max for bounded dists, percentiles for unbounded)
             if dist in ("Triangular", "Beta-PERT", "Uniform", "Beta"):
                 lo_x, hi_x = draws.min(), draws.max()
             else:
@@ -280,12 +284,21 @@ def assumption_widget(key, title, icon,
                               annotation_font_size=9,
                               annotation_position="top right")
 
+            # x-axis: centre on the data spread with a small pad, never forced to start at 0
+            spread = hi_x - lo_x
+            pad    = spread * 0.08
+            x_range = [lo_x - pad, hi_x + pad]
+
         fig.update_layout(
             height=150,
             margin=dict(t=10, b=20, l=30, r=10),
             paper_bgcolor="white", plot_bgcolor="#f6f8fa",
             font=dict(family="IBM Plex Sans", size=10),
-            xaxis=dict(title=preview_xlabel + (" (%)" if is_pct else ""), title_font_size=10),
+            xaxis=dict(
+                title=preview_xlabel + (" (%)" if is_pct else ""),
+                title_font_size=10,
+                range=x_range,
+            ),
             yaxis=dict(title="", showticklabels=False),
             showlegend=False,
         )
