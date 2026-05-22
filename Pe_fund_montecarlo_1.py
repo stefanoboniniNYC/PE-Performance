@@ -949,7 +949,8 @@ if run_btn or "mc_results" in st.session_state:
         fig = go.Figure()
         fig.add_trace(go.Histogram(x=cl, nbinsx=nbins,
                                    marker_color=color, opacity=0.85,
-                                   histnorm="probability density"))
+                                   histnorm="probability density",
+                                   marker_line=dict(color="rgba(0,0,0,0.3)", width=0.5)))
         if vlines:
             for x_val, dash, ann, pos in vlines:
                 fig.add_vline(x=x_val, line_dash=dash, line_color="#f78166",
