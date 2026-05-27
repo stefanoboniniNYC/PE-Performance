@@ -949,7 +949,6 @@ info_col.markdown(
 if run_btn:
     with st.spinner(f"Sampling distributions and running {n_sims:,} scenarios..."):
         np.random.seed(int(seed))
-
         draws = {
             "fund_size": sample_dist(fs_dist, fs_params, n_sims),
             "mgmt_fee":  sample_dist(mf_dist, mf_params, n_sims),
@@ -960,8 +959,9 @@ if run_btn:
             "dur":       sample_dist(du_dist, du_params, n_sims * 5),
             "mkt":       sample_dist(mk_dist, mk_params, n_sims),
         }
-        df = run_mc(n_sims, draws, float(inv_std_pct), int(seed))
-    st.session_state["mc_results"] = df
+        _fresh_df = run_mc(n_sims, draws, float(inv_std_pct), int(seed))
+        st.session_state["mc_results"] = _fresh_df
+    st.rerun()
 
 if "mc_results" in st.session_state:
     df = st.session_state["mc_results"]
