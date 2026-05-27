@@ -710,6 +710,10 @@ st.caption("Each assumption can be set as a fixed number or sampled from a distr
            "The mini-chart updates live as you change parameters.")
 
 col_A, col_B = st.columns(2, gap="large")
+with col_A:
+    st.markdown('<p style="font-size:18px;font-weight:700;color:#0d1117;margin:0 0 12px;">Fund Structure Assumptions</p>', unsafe_allow_html=True)
+with col_B:
+    st.markdown('<p style="font-size:18px;font-weight:700;color:#0d1117;margin:0 0 12px;">Investment & Market Assumptions</p>', unsafe_allow_html=True)
 
 # ââ LEFT COLUMN: Fund structure assumptions ââ
 with col_A:
@@ -1018,9 +1022,19 @@ if run_btn or "mc_results" in st.session_state:
         lo, hi = np.percentile(cl, 0.5), np.percentile(cl, 99.5)
         cl = cl[(cl >= lo) & (cl <= hi)]
         fig = go.Figure()
+        # Derive a darker shade for the bar outline
+        marker_line_colors = {
+            "#58a6ff": "#1a5fa8",   # blue
+            "#3fb950": "#1a7f37",   # green
+            "#8957e5": "#5a2db5",   # purple
+            "#f0883e": "#b85e1a",   # orange
+            "#f78166": "#b84c37",   # red-orange
+        }
+        line_color = marker_line_colors.get(color, "rgba(0,0,0,0.3)")
         fig.add_trace(go.Histogram(x=cl, nbinsx=nbins,
                                    marker_color=color, opacity=0.85,
-                                   histnorm="probability density"))
+                                   histnorm="probability density",
+                                   marker_line=dict(color=line_color, width=0.5)))
         if vlines:
             for x_val, dash, ann, pos in vlines:
                 fig.add_vline(x=x_val, line_dash=dash, line_color="#f78166",
@@ -1032,7 +1046,9 @@ if run_btn or "mc_results" in st.session_state:
                           font=dict(family="IBM Plex Sans"), showlegend=False)
         return fig
 
-    c1, c2, c3 = st.columns(3)
+    gp_dist_s = s("total_gp_dist")
+
+    c1, c2, c3, c4 = st.columns(4)
     with c1:
         st.plotly_chart(hist_fig(mom, "#58a6ff", "LP MoM (C62)", "MoM (x)",
             [(mom.median(), "dash", f"Median {mom.median():.2f}x", "top right"),
@@ -1046,6 +1062,11 @@ if run_btn or "mc_results" in st.session_state:
         st.plotly_chart(hist_fig(mirr_mom_s, "#8957e5", "MoM @ MIRR (C67)", "MoM (x)",
             [(mirr_mom_s.median(), "dash", f"Median {mirr_mom_s.median():.2f}x", "top right"),
              (1.0, "dot", "1.0x", "top left")]),
+            use_container_width=True)
+    with c4:
+        st.plotly_chart(hist_fig(gp_dist_s, "#f0883e", "GP Distributions (C54)", "$M",
+            [(gp_dist_s.median(), "dash", f"Median ${gp_dist_s.median():.1f}M", "top right"),
+             (0.0, "dot", "0 (no carry)", "top left")]),
             use_container_width=True)
 
     c4, c5 = st.columns(2)
@@ -1106,6 +1127,7 @@ if run_btn or "mc_results" in st.session_state:
         "Fund DPI (C69)":       prow("fund_dpi"),
         "PME MoM (C74)":        prow("mkt_mom"),
         "Fund Life (C51)":      prow("fund_life", "{:.0f}"),
+        "GP Dist $M (C54)":     prow("total_gp_dist", "{:.1f}"),
     }
     tbl_df = pd.DataFrame(tbl)
 
@@ -1150,6 +1172,9 @@ if run_btn or "mc_results" in st.session_state:
         "Mean MIRR Zero (C65)": f"{mirr_zero.mean():.1f}%",
         "Mean MIRR Cal (C66)":  f"{mirr_cal.mean():.1f}%",
         "P(Loss < 1x)":         f"{(mom < 1).mean()*100:.1f}%",
+        "Mean GP Dist (C54)":   f"${gp_dist_s.mean():.1f}M",
+        "Median GP Dist (C54)": f"${gp_dist_s.median():.1f}M",
+        "P(GP = 0)":            f"{(gp_dist_s == 0).mean()*100:.1f}%",
     })
     stat_card(s2, "Market Comparison", {
         "% Beats Mkt MoM (C77)":   f"{beats_pct:.1f}%",
