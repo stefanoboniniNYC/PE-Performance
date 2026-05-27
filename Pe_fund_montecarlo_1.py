@@ -642,6 +642,10 @@ st.caption("Each assumption can be set as a fixed number or sampled from a distr
            "The mini-chart updates live as you change parameters.")
 
 col_A, col_B = st.columns(2, gap="large")
+with col_A:
+    st.markdown("#### Fund Structure Assumptions")
+with col_B:
+    st.markdown("#### Investment & Market Assumptions")
 
 # ââ LEFT COLUMN: Fund structure assumptions ââ
 with col_A:
