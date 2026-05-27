@@ -340,6 +340,7 @@ def assumption_widget(key, title, icon,
                 x=draws_cl, nbinsx=60,
                 marker_color="#58a6ff", opacity=0.8,
                 histnorm="probability density",
+                marker_line=dict(color="#1a5fa8", width=0.5),
             ))
             # P10 / median / P90 lines
             for q, col_line, lbl in [
@@ -966,15 +967,6 @@ if run_btn:
 if "mc_results" in st.session_state:
     df = st.session_state["mc_results"]
 
-    # ── DIAGNOSTIC ──
-    _gp = df["total_gp_dist"]
-    st.error(
-        f"DIAGNOSTIC: {len(df):,} rows | "
-        f"GP=0: {(_gp==0).mean()*100:.1f}% | "
-        f"LP MoM median: {df['lp_mom'].median():.3f}x | "
-        f"df id: {id(df)}"
-    )
-
     # ── KPI row ──
     st.markdown('<div class="section-hdr">Simulation Results</div>', unsafe_allow_html=True)
 
@@ -1062,55 +1054,68 @@ if "mc_results" in st.session_state:
              (1.0, "dot", "1.0x", "top left")]),
             use_container_width=True)
     with c4:
-        # GP distribution needs special treatment: large zero mass + continuous positive part
-        _gp_zero_pct = (gp_dist_s == 0).mean() * 100
+        _gp_zero_pct = (gp_dist_s == 0).mean()
         _gp_pos      = gp_dist_s[gp_dist_s > 0]
         _gp_fig = go.Figure()
-        # Bar at zero showing exact probability mass
-        _gp_fig.add_trace(go.Bar(
-            x=[0], y=[_gp_zero_pct],
-            width=[max(_gp_pos.max() * 0.04, 2.0)],
-            marker_color="#f78166", opacity=0.9,
-            marker_line=dict(color="#b84c37", width=0.8),
-            name=f"Zero carry ({_gp_zero_pct:.1f}%)",
-            yaxis="y2",
-        ))
-        # Histogram of positive values on primary y-axis (density)
+
         if len(_gp_pos) > 0:
             _lo = np.percentile(_gp_pos, 0.5)
             _hi = np.percentile(_gp_pos, 99.5)
             _gp_pos_cl = _gp_pos[(_gp_pos >= _lo) & (_gp_pos <= _hi)]
+            _nbins   = 70
+            _bw      = (_hi - _lo) / _nbins
+            _gap     = _bw
+            _bar_x   = _lo - _gap - _bw / 2
+            _bar_w   = _bw
+
+            # Positive histogram
             _gp_fig.add_trace(go.Histogram(
-                x=_gp_pos_cl, nbinsx=70,
+                x=_gp_pos_cl, nbinsx=_nbins,
                 marker_color="#f0883e", opacity=0.85,
                 histnorm="probability",
                 marker_line=dict(color="#b85e1a", width=0.5),
                 name="GP > 0",
-                yaxis="y",
             ))
-            _gp_fig.add_vline(
-                x=float(_gp_pos.median()), line_dash="dash", line_color="#0d1117",
-                annotation_text=f"Median (when>0) ${_gp_pos.median():.1f}M",
-                annotation_font_size=9, annotation_position="top right"
+
+            # Tallest bin height (as probability)
+            _counts, _edges = np.histogram(_gp_pos_cl, bins=_nbins, range=(_lo, _hi))
+            _tallest = float(_counts.max()) / len(_gp_pos_cl)
+
+            # Zero bar: same height as tallest bin, left of first bin with gap
+            _gp_fig.add_trace(go.Bar(
+                x=[_bar_x], y=[_tallest],
+                width=[_bar_w],
+                marker_color="#f78166", opacity=0.9,
+                marker_line=dict(color="#b84c37", width=0.8),
+                name="Zero carry",
+            ))
+            _gp_fig.add_annotation(
+                x=_bar_x, y=_tallest,
+                text=f"P(GP=0)<br>{_gp_zero_pct*100:.1f}%",
+                showarrow=False,
+                font=dict(size=9, color="#b84c37"),
+                yanchor="bottom", xanchor="center",
             )
-        _gp_fig.update_layout(
-            title="GP Distributions (C54)",
-            xaxis=dict(title="$M", range=[-2, float(np.percentile(gp_dist_s[gp_dist_s>0], 99.5)) * 1.05] if len(_gp_pos)>0 else [0,100]),
-            yaxis=dict(title="Probability (positive values)", side="left"),
-            yaxis2=dict(title="% scenarios (zero carry)", side="right", overlaying="y",
-                        showgrid=False, range=[0, _gp_zero_pct * 6]),
-            height=300, margin=dict(t=45, b=35, l=35, r=45),
-            paper_bgcolor="white", plot_bgcolor="#f6f8fa",
-            font=dict(family="IBM Plex Sans"),
-            legend=dict(orientation="h", y=-0.2, font_size=10),
-            showlegend=True,
-            annotations=[dict(
-                x=0, y=_gp_zero_pct, xref="x", yref="y2",
-                text=f"{_gp_zero_pct:.1f}%",
-                showarrow=False, font=dict(size=10, color="#b84c37"),
-                yanchor="bottom"
-            )],
-        )
+
+            # Median line in red
+            _gp_fig.add_vline(
+                x=float(_gp_pos.median()), line_dash="dash",
+                line_color="#e63946", line_width=1.5,
+                annotation_text=f"Median ${_gp_pos.median():.1f}M",
+                annotation_font=dict(size=9, color="#e63946"),
+                annotation_position="top right",
+            )
+
+            _gp_fig.update_layout(
+                title="GP Distributions (C54)",
+                xaxis=dict(title="$M", range=[_bar_x - _bw, _hi * 1.03]),
+                yaxis=dict(title="Probability"),
+                height=300, margin=dict(t=45, b=35, l=35, r=15),
+                paper_bgcolor="white", plot_bgcolor="#f6f8fa",
+                font=dict(family="IBM Plex Sans"),
+                legend=dict(orientation="h", y=-0.22, font_size=10),
+                showlegend=True, barmode="overlay",
+            )
         st.plotly_chart(_gp_fig, use_container_width=True)
 
     c4, c5 = st.columns(2)
