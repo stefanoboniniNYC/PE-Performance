@@ -11,9 +11,9 @@ import plotly.graph_objects as go
 import warnings
 warnings.filterwarnings("ignore")
 
-# âââââââââââââââââââââââââââââââââââââââââââââ
+# ─────────────────────────────────────────────
 # PAGE CONFIG
-# âââââââââââââââââââââââââââââââââââââââââââââ
+# ─────────────────────────────────────────────
 st.set_page_config(
     page_title="PE Fund Monte Carlo",
     page_icon="[MoM]",
@@ -21,9 +21,9 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# âââââââââââââââââââââââââââââââââââââââââââââ
+# ─────────────────────────────────────────────
 # CSS
-# âââââââââââââââââââââââââââââââââââââââââââââ
+# ─────────────────────────────────────────────
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
@@ -31,7 +31,7 @@ st.markdown("""
 html, body, [class*="css"] { font-family: 'IBM Plex Sans', sans-serif; }
 .main { background: #f6f8fa; }
 
-/* ââ assumption card ââ */
+/* ── assumption card ── */
 .assump-card {
   background: white;
   border: 1px solid #d0d7de;
@@ -53,7 +53,7 @@ html, body, [class*="css"] { font-family: 'IBM Plex Sans', sans-serif; }
 .badge-fixed   { background:#e6f4ea; color:#1a7f37; border:1px solid #aad7b1; }
 .badge-stoch   { background:#ddf4ff; color:#0550ae; border:1px solid #54aeff; }
 
-/* ââ KPI cards ââ */
+/* ── KPI cards ── */
 .metric-card {
   background: white; border: 1px solid #d0d7de;
   border-radius: 8px; padding: 16px 20px; margin-bottom: 8px;
@@ -68,7 +68,7 @@ html, body, [class*="css"] { font-family: 'IBM Plex Sans', sans-serif; }
 }
 .metric-sub { font-size: 11px; color: #8c959f; margin-top: 3px; }
 
-/* ââ section heading ââ */
+/* ── section heading ── */
 .section-hdr {
   font-size: 12px; font-weight: 700; text-transform: uppercase;
   letter-spacing: .12em; color: #0d1117;
@@ -76,7 +76,7 @@ html, body, [class*="css"] { font-family: 'IBM Plex Sans', sans-serif; }
   margin: 28px 0 16px;
 }
 
-/* ââ percentile table ââ */
+/* ── percentile table ── */
 .pct-table { width:100%; border-collapse:collapse; font-size:13px; }
 .pct-table th {
   background:#0d1117; color:white; padding:8px 12px;
@@ -98,9 +98,9 @@ html, body, [class*="css"] { font-family: 'IBM Plex Sans', sans-serif; }
 """, unsafe_allow_html=True)
 
 
-# âââââââââââââââââââââââââââââââââââââââââââââ
+# ─────────────────────────────────────────────
 # DISTRIBUTION ENGINE
-# âââââââââââââââââââââââââââââââââââââââââââââ
+# ─────────────────────────────────────────────
 
 DIST_TYPES = ["Fixed", "Triangular", "Beta-PERT", "Uniform", "Normal", "Log-Normal", "Beta",
               "Custom Discrete"]
@@ -216,11 +216,11 @@ def dist_label(dist, params):
     return dist
 
 
-# âââââââââââââââââââââââââââââââââââââââââââââ
+# ─────────────────────────────────────────────
 # ASSUMPTION WIDGET
 # builds the dist selector + param inputs + inline mini-preview
 # returns (dist_type, params_dict)
-# âââââââââââââââââââââââââââââââââââââââââââââ
+# ─────────────────────────────────────────────
 
 def assumption_widget(key, title, icon,
                       default_dist, defaults_by_dist,
@@ -242,7 +242,7 @@ def assumption_widget(key, title, icon,
         unsafe_allow_html=True
     )
 
-    # ââ distribution type selector ââ
+    # ── distribution type selector ──
     dist_idx = DIST_TYPES.index(default_dist) if default_dist in DIST_TYPES else 0
     dist = st.selectbox(
         "Distribution", DIST_TYPES,
@@ -250,7 +250,7 @@ def assumption_widget(key, title, icon,
         label_visibility="collapsed",
     )
 
-    # ââ parameter inputs (dynamic, based on dist) ââ
+    # ── parameter inputs (dynamic, based on dist) ──
     param_defs = DIST_PARAMS[dist]
     dp = defaults_by_dist.get(dist, {})
     params = {}
@@ -294,7 +294,7 @@ def assumption_widget(key, title, icon,
                 step=abs(default_val) * 0.05 if default_val != 0 else 0.01,
             )
 
-    # ââ inline mini-preview chart ââ
+    # ── inline mini-preview chart ──
     try:
         draws = sample_dist(dist, params, 5000) * preview_scale
         if is_pct:
@@ -379,9 +379,9 @@ def assumption_widget(key, title, icon,
     return dist, params
 
 
-# âââââââââââââââââââââââââââââââââââââââââââââ
+# ─────────────────────────────────────────────
 # SIMULATION ENGINE  (vectorised across all N sims simultaneously)
-# âââââââââââââââââââââââââââââââââââââââââââââ
+# ─────────────────────────────────────────────
 # All arrays have shape (S,) for scalars or (S, N) for time-series,
 # where S = number of simulations and N = 12 (years 0..11).
 # The year-loop runs only 11 times (not S times), giving ~50x speedup.
@@ -449,7 +449,7 @@ def run_mc(n_sims, assumption_draws, inv_std_pct, seed):
     np.random.seed(seed)
     S = n_sims
 
-    # ââ Unpack pre-drawn assumptions ââââââââââââââââââââââââââââââââââââââ
+    # ── Unpack pre-drawn assumptions ──────────────────────────────────────
     fs  = np.maximum(assumption_draws["fund_size"],             1.0)     # (S,)
     mf  = np.clip(assumption_draws["mgmt_fee"],   0.0,  0.10)           # (S,)
     cr  = np.clip(assumption_draws["carry"],       0.0,  0.50)          # (S,)
@@ -461,7 +461,7 @@ def run_mc(n_sims, assumption_draws, inv_std_pct, seed):
     dur  = np.clip(np.round(
               assumption_draws["dur"].reshape(S, 5)).astype(int), 1, 9) # (S,5)
 
-    # ââ Row 17: Annual investments (S, 5) ââââââââââââââââââââââââââââââââ
+    # ── Row 17: Annual investments (S, 5) ────────────────────────────────
     mean_inv = (fs * ip / INV_YRS)[:, None]                  # (S,1)
     std_inv  = mean_inv * inv_std_pct
     inv_raw  = np.maximum(0.0,
@@ -471,7 +471,7 @@ def run_mc(n_sims, assumption_draws, inv_std_pct, seed):
                    fs * ip - inv_raw.sum(axis=1))            # (S,)
     inv = np.concatenate([inv_raw, inv_yr5[:, None]], axis=1) # (S,5)
 
-    # ââ Rows 28/29: Scatter exits onto calendar year axis ââââââââââââââââ
+    # ── Rows 28/29: Scatter exits onto calendar year axis ────────────────
     # exit_yr[s, c] = cohort c invested in year (c+1), exits at year (c+1)+dur[s,c]
     cohort_inv_yr = np.arange(1, INV_YRS + 1)[None, :]       # (1,5)
     exit_yr = np.clip(cohort_inv_yr + dur, 1, N_YRS - 1)     # (S,5)
@@ -489,24 +489,24 @@ def run_mc(n_sims, assumption_draws, inv_std_pct, seed):
 
     total_divest = cap_ret + gain_ret          # (S, N_YRS)
 
-    # ââ Row 18: Running portfolio balance ââââââââââââââââââââââââââââââââ
+    # ── Row 18: Running portfolio balance ────────────────────────────────
     row18 = np.zeros((S, N_YRS))
     row18[:, 1] = inv[:, 0]
     for yr in range(2, N_YRS):
         inv_yr_col = inv[:, yr - 1] if yr <= INV_YRS else 0.0
         row18[:, yr] = np.maximum(0.0, row18[:, yr-1] + inv_yr_col - cap_ret[:, yr])
 
-    # ââ Row 20: Management fees ââââââââââââââââââââââââââââââââââââââââââ
+    # ── Row 20: Management fees ──────────────────────────────────────────
     mgmt_fees = np.zeros((S, N_YRS))
     for yr in range(1, INV_YRS + 1):
         mgmt_fees[:, yr] = mf * fs
     for yr in range(INV_YRS + 1, N_YRS):
         mgmt_fees[:, yr] = np.where(row18[:, yr-1] > 0, row18[:, yr-1] * mf, 0.0)
 
-    # ââ Row 30: Cumulative total divestments âââââââââââââââââââââââââââââ
+    # ── Row 30: Cumulative total divestments ─────────────────────────────
     row30 = np.cumsum(total_divest, axis=1)    # (S, N_YRS)
 
-    # ââ Rows 32/33: Hurdle capital & residual ââââââââââââââââââââââââââââ
+    # ── Rows 32/33: Hurdle capital & residual ────────────────────────────
     # Sequential recurrence over years -- unavoidable, but only 11 iterations
     row32 = np.zeros((S, N_YRS))
     row33 = np.zeros((S, N_YRS))
@@ -516,20 +516,20 @@ def run_mc(n_sims, assumption_draws, inv_std_pct, seed):
         row32[:, yr] = row33[:, yr-1] * (1.0 + hu)
         row33[:, yr] = np.maximum(0.0, row32[:, yr] - total_divest[:, yr])
 
-    # ââ Row 34: Non-carry LP distributions ââââââââââââââââââââââââââââââ
+    # ── Row 34: Non-carry LP distributions ──────────────────────────────
     has_divest = total_divest > 0              # (S, N_YRS)
     row34 = np.where(has_divest,
                      np.minimum(total_divest, row32), 0.0)    # (S, N_YRS)
 
-    # ââ Row 35: Cumulative non-carry âââââââââââââââââââââââââââââââââââââ
+    # ── Row 35: Cumulative non-carry ─────────────────────────────────────
     row35 = np.cumsum(row34, axis=1)           # (S, N_YRS)
 
-    # ââ Row 36: Residual for catch-up and carry ââââââââââââââââââââââââââ
+    # ── Row 36: Residual for catch-up and carry ──────────────────────────
     above_hurdle = row30 > row35               # (S, N_YRS)
     row36 = np.where(above_hurdle & has_divest,
                      total_divest - row34, 0.0)               # (S, N_YRS)
 
-    # ââ Row 38: Catch-up computed ââââââââââââââââââââââââââââââââââââââââ
+    # ── Row 38: Catch-up computed ────────────────────────────────────────
     cu_ratio = cr / (1.0 - cr)                 # (S,)
     row38 = np.where(
         (row36 > 0) & (row32 > 0),
@@ -537,7 +537,7 @@ def run_mc(n_sims, assumption_draws, inv_std_pct, seed):
         0.0
     )                                           # (S, N_YRS)
 
-    # ââ Rows 39/40: Catch-up actual (state machine, sequential) âââââââââ
+    # ── Rows 39/40: Catch-up actual (state machine, sequential) ─────────
     row39 = np.zeros((S, N_YRS))
     row40 = np.zeros((S, N_YRS))
     cs36  = np.zeros((S, N_YRS))
@@ -556,19 +556,19 @@ def run_mc(n_sims, assumption_draws, inv_std_pct, seed):
         cs39[:, yr] = cs39[:, yr-1] + row39[:, yr]
         row40[:, yr] = np.maximum(0.0, cs38[:, yr] - cs39[:, yr])
 
-    # ââ Rows 41/42: Carry split ââââââââââââââââââââââââââââââââââââââââââ
+    # ── Rows 41/42: Carry split ──────────────────────────────────────────
     excess = np.maximum(0.0, row36 - row39)    # (S, N_YRS)
     row41  = excess * (1.0 - cr[:, None])      # LP carry  (S, N_YRS)
     row42  = excess * cr[:, None]              # GP carry  (S, N_YRS)
 
-    # ââ Row 44: Contributions ââââââââââââââââââââââââââââââââââââââââââââ
+    # ── Row 44: Contributions ────────────────────────────────────────────
     contributions = np.zeros((S, N_YRS))
     for yr in range(1, INV_YRS + 1):
         contributions[:, yr] = inv[:, yr-1] + mgmt_fees[:, yr]
     for yr in range(INV_YRS + 1, N_YRS):
         contributions[:, yr] = mgmt_fees[:, yr]
 
-    # ââ Rows 45/46/47/48 âââââââââââââââââââââââââââââââââââââââââââââââââ
+    # ── Rows 45/46/47/48 ─────────────────────────────────────────────────
     row45 = row34 + row39 + row41 + row42                   # total fund dist
     lp_dist       = np.zeros((S, N_YRS))
     lp_dist[:, 0] = -fs
@@ -581,7 +581,7 @@ def run_mc(n_sims, assumption_draws, inv_std_pct, seed):
     net_lp[:, 0] = -fs
     net_lp[:, 1:] = lp_dist[:, 1:] - contributions[:, 1:]
 
-    # ââ Fund life (C51): first yr cumulative cap_ret >= total invested âââ
+    # ── Fund life (C51): first yr cumulative cap_ret >= total invested ───
     total_inv_per_sim = cap_ret.sum(axis=1)                  # (S,)
     cum_cap = np.cumsum(cap_ret[:, 1:], axis=1)              # (S,11)
     # For each sim: first col where cumsum >= total_inv (rounded to 2dp)
@@ -592,7 +592,7 @@ def run_mc(n_sims, assumption_draws, inv_std_pct, seed):
                               np.maximum(1, (cap_ret > 0).cumsum(axis=1).argmax(axis=1)))
     fund_life = first_reached.astype(float)                  # (S,)
 
-    # ââ IRR / MIRR (vectorised) ââââââââââââââââââââââââââââââââââââââââââ
+    # ── IRR / MIRR (vectorised) ──────────────────────────────────────────
     # C60: Fund IRR Zero = IRR([-fs, row45_yr1..yr11])
     fund_dist_cf = np.concatenate([-fs[:, None], row45[:, 1:]], axis=1)  # (S,12)
     fund_irr_zero = _irr_vec(fund_dist_cf)
@@ -628,7 +628,7 @@ def run_mc(n_sims, assumption_draws, inv_std_pct, seed):
     lp_mirr_zero = mirr_vec_perrate(lp_dist[:, :11], 0.04, mkt)   # C65
     lp_mirr_cal  = mirr_vec_perrate(net_lp[:, 1:],   0.04, mkt)   # C66
 
-    # ââ Scalar metrics ââââââââââââââââââââââââââââââââââââââââââââââââââââ
+    # ── Scalar metrics ────────────────────────────────────────────────────
     total_lp_dist = lp_dist[:, 1:].sum(axis=1)                     # (S,)
     total_contrib = contributions[:, 1:].sum(axis=1)                # (S,)
 
@@ -666,9 +666,9 @@ def run_mc(n_sims, assumption_draws, inv_std_pct, seed):
     })
 
 
-# âââââââââââââââââââââââââââââââââââââââââââââ
+# ─────────────────────────────────────────────
 # PAGE HEADER
-# âââââââââââââââââââââââââââââââââââââââââââââ
+# ─────────────────────────────────────────────
 
 st.markdown("""
 <div style="background:#0d1117;padding:22px 32px;border-radius:10px;margin-bottom:24px;">
@@ -681,9 +681,9 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# âââââââââââââââââââââââââââââââââââââââââââââ
+# ─────────────────────────────────────────────
 # SIMULATION SETTINGS (top bar)
-# âââââââââââââââââââââââââââââââââââââââââââââ
+# ─────────────────────────────────────────────
 
 cfg1, cfg2 = st.columns([1, 1])
 n_sims = cfg1.select_slider("Simulations", options=[500, 1000, 2500, 5000, 10000, 25000, 50000, 100000], value=10000)
@@ -701,9 +701,9 @@ seed   = cfg2.number_input(
 
 st.markdown("---")
 
-# âââââââââââââââââââââââââââââââââââââââââââââ
+# ─────────────────────────────────────────────
 # ASSUMPTION CONFIGURATORS - two columns of cards
-# âââââââââââââââââââââââââââââââââââââââââââââ
+# ─────────────────────────────────────────────
 
 st.markdown('<div class="section-hdr">Monte Carlo Assumptions</div>', unsafe_allow_html=True)
 st.caption("Each assumption can be set as a fixed number or sampled from a distribution every simulation. "
@@ -715,7 +715,7 @@ with col_A:
 with col_B:
     st.markdown('<p style="font-size:18px;font-weight:700;color:#0d1117;margin:0 0 12px;">Investment & Market Assumptions</p>', unsafe_allow_html=True)
 
-# ââ LEFT COLUMN: Fund structure assumptions ââ
+# ── LEFT COLUMN: Fund structure assumptions ──
 with col_A:
 
     # 1. Fund Size
@@ -870,7 +870,7 @@ with col_A:
         )
 
 
-# ââ RIGHT COLUMN: Stochastic return/market assumptions ââ
+# ── RIGHT COLUMN: Stochastic return/market assumptions ──
 with col_B:
 
     # 6. Divestment Multiplier
@@ -929,9 +929,9 @@ with col_B:
         )
 
 
-# âââââââââââââââââââââââââââââââââââââââââââââ
+# ─────────────────────────────────────────────
 # RUN BUTTON
-# âââââââââââââââââââââââââââââââââââââââââââââ
+# ─────────────────────────────────────────────
 
 st.markdown("---")
 run_col, info_col = st.columns([1, 5])
@@ -942,9 +942,9 @@ info_col.markdown(
     unsafe_allow_html=True,
 )
 
-# âââââââââââââââââââââââââââââââââââââââââââââ
+# ─────────────────────────────────────────────
 # SIMULATION + RESULTS
-# âââââââââââââââââââââââââââââââââââââââââââââ
+# ─────────────────────────────────────────────
 
 if run_btn:
     with st.spinner(f"Sampling distributions and running {n_sims:,} scenarios..."):
@@ -966,7 +966,7 @@ if run_btn:
 if "mc_results" in st.session_state:
     df = st.session_state["mc_results"]
 
-    # ââ DIAGNOSTIC ââ
+    # ── DIAGNOSTIC ──
     _gp = df["total_gp_dist"]
     st.error(
         f"DIAGNOSTIC: {len(df):,} rows | "
@@ -975,7 +975,7 @@ if "mc_results" in st.session_state:
         f"df id: {id(df)}"
     )
 
-    # ââ KPI row ââ
+    # ── KPI row ──
     st.markdown('<div class="section-hdr">Simulation Results</div>', unsafe_allow_html=True)
 
     def s(col): return df[col].dropna().replace([np.inf, -np.inf], np.nan).dropna()
@@ -1014,7 +1014,7 @@ if "mc_results" in st.session_state:
         f"P10: {mirr_mom_s.quantile(.1):.2f}  P90: {mirr_mom_s.quantile(.9):.2f}")
     kpi(k6, "% Beats Market",    f"{beats_pct:.0f}%", "LP MoM > PME MoM")
 
-    # ââ charts ââ
+    # ── charts ──
     def hist_fig(series, color, title, xlabel, vlines=None, nbins=80):
         cl = series.replace([np.inf,-np.inf], np.nan).dropna()
         lo, hi = np.percentile(cl, 0.5), np.percentile(cl, 99.5)
@@ -1038,11 +1038,10 @@ if "mc_results" in st.session_state:
                 fig.add_vline(x=x_val, line_dash=dash, line_color="#f78166",
                               annotation_text=ann, annotation_position=pos,
                               annotation_font_size=10)
-        fig.update_layout(title=title, xaxis_title=xlabel, yaxis_title="Density",
+        fig.update_layout(title=title, xaxis_title=xlabel, yaxis_title="Probability",
                           height=300, margin=dict(t=45, b=35, l=35, r=10),
                           paper_bgcolor="white", plot_bgcolor="#f6f8fa",
-                          font=dict(family="IBM Plex Sans"), showlegend=False,
-                          yaxis_title="Probability")
+                          font=dict(family="IBM Plex Sans"), showlegend=False)
         return fig
 
     gp_dist_s = s("total_gp_dist")
@@ -1149,7 +1148,7 @@ if "mc_results" in st.session_state:
             font=dict(family="IBM Plex Sans"), showlegend=False)
         st.plotly_chart(fig_cdf, use_container_width=True)
 
-    # ââ Full percentile table ââ
+    # ── Full percentile table ──
     st.markdown('<div class="section-hdr">Percentile Statistics - All Forecasts</div>',
                 unsafe_allow_html=True)
 
@@ -1188,7 +1187,7 @@ if "mc_results" in st.session_state:
         unsafe_allow_html=True
     )
 
-    # ââ Summary stats ââ
+    # ── Summary stats ──
     st.markdown('<div class="section-hdr">Summary Statistics</div>', unsafe_allow_html=True)
     s1, s2, s3 = st.columns(3)
 
