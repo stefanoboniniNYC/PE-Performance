@@ -946,67 +946,25 @@ info_col.markdown(
 # SIMULATION + RESULTS
 # âââââââââââââââââââââââââââââââââââââââââââââ
 
-# Build a fingerprint of all current parameters so we can detect stale cache
-_current_fingerprint = str({
-    "n_sims": n_sims, "seed": seed, "inv_std_pct": inv_std_pct,
-    "fs": (fs_dist, sorted(fs_params.items())),
-    "mf": (mf_dist, sorted(mf_params.items())),
-    "cr": (cr_dist, sorted(cr_params.items())),
-    "hu": (hu_dist, sorted(hu_params.items())),
-    "ip": (ip_dist, sorted(ip_params.items())),
-    "mu": (mu_dist, sorted(mu_params.items())),
-    "du": (du_dist, sorted(du_params.items())),
-    "mk": (mk_dist, sorted(mk_params.items())),
-})
-_cached_fingerprint = st.session_state.get("mc_fingerprint", None)
-_results_stale = (_cached_fingerprint != _current_fingerprint)
+if run_btn:
+    with st.spinner(f"Sampling distributions and running {n_sims:,} scenarios..."):
+        np.random.seed(int(seed))
 
-if run_btn or ("mc_results" in st.session_state and not _results_stale):
-
-    if run_btn:
-        with st.spinner(f"Sampling distributions and running {n_sims:,} scenarios..."):
-            np.random.seed(int(seed))
-
-            draws = {
-                "fund_size": sample_dist(fs_dist, fs_params, n_sims),
-                "mgmt_fee":  sample_dist(mf_dist, mf_params, n_sims),
-                "carry":     sample_dist(cr_dist, cr_params, n_sims),
-                "hurdle":    sample_dist(hu_dist, hu_params, n_sims),
-                "inv_pct":   sample_dist(ip_dist, ip_params, n_sims),
-                "mult":      sample_dist(mu_dist, mu_params, n_sims * 5),
-                "dur":       sample_dist(du_dist, du_params, n_sims * 5),
-                "mkt":       sample_dist(mk_dist, mk_params, n_sims),
-            }
-
-            df = run_mc(n_sims, draws, float(inv_std_pct), int(seed))
-
-        # ââ DEBUG: show exactly what was passed to the engine ââ
-        with st.expander("DEBUG - Parameters used in this run (remove after diagnosis)", expanded=True):
-            st.write(f"**Multiplier dist:** `{mu_dist}`")
-            st.write(f"**Multiplier params:** `{mu_params}`")
-            st.write(f"**Duration dist:** `{du_dist}`")
-            st.write(f"**Duration params:** `{du_params}`")
-            mult_sample = draws["mult"]
-            dur_sample  = draws["dur"]
-            st.write(f"**Mult draws** â mean: `{mult_sample.mean():.3f}`  P10: `{np.percentile(mult_sample,10):.3f}`  P50: `{np.percentile(mult_sample,50):.3f}`  P90: `{np.percentile(mult_sample,90):.3f}`  P(mult<1): `{(mult_sample<1).mean()*100:.1f}%`")
-            unique_dur, counts = np.unique(np.round(dur_sample).astype(int), return_counts=True)
-            dur_freq = {int(k): f"{v/len(dur_sample)*100:.1f}%" for k,v in zip(unique_dur, counts)}
-            st.write(f"**Dur draws** â mean: `{dur_sample.mean():.2f}`  frequencies: `{dur_freq}`")
-            st.write(f"**GP=0 frequency:** `{(df['total_gp_dist']==0).mean()*100:.1f}%`")
-        st.session_state["mc_results"]     = df
-        st.session_state["mc_fingerprint"] = _current_fingerprint
-        st.session_state["mc_meta"] = {
-            "fs": (fs_dist, fs_params), "mf": (mf_dist, mf_params),
-            "cr": (cr_dist, cr_params), "hu": (hu_dist, hu_params),
-            "ip": (ip_dist, ip_params), "mu": (mu_dist, mu_params),
-            "du": (du_dist, du_params), "mk": (mk_dist, mk_params),
+        draws = {
+            "fund_size": sample_dist(fs_dist, fs_params, n_sims),
+            "mgmt_fee":  sample_dist(mf_dist, mf_params, n_sims),
+            "carry":     sample_dist(cr_dist, cr_params, n_sims),
+            "hurdle":    sample_dist(hu_dist, hu_params, n_sims),
+            "inv_pct":   sample_dist(ip_dist, ip_params, n_sims),
+            "mult":      sample_dist(mu_dist, mu_params, n_sims * 5),
+            "dur":       sample_dist(du_dist, du_params, n_sims * 5),
+            "mkt":       sample_dist(mk_dist, mk_params, n_sims),
         }
-    else:
-        df = st.session_state["mc_results"]
+        df = run_mc(n_sims, draws, float(inv_std_pct), int(seed))
+    st.session_state["mc_results"] = df
 
-    # Warn user if displayed results are from different parameters
-    if _results_stale and not run_btn:
-        st.warning("Parameters have changed since the last run. Click Run Simulation to update results.", icon="!")
+if "mc_results" in st.session_state:
+    df = st.session_state["mc_results"]
 
     # ââ KPI row ââ
     st.markdown('<div class="section-hdr">Simulation Results</div>', unsafe_allow_html=True)
