@@ -1062,11 +1062,9 @@ if "mc_results" in st.session_state:
             _lo = np.percentile(_gp_pos, 0.5)
             _hi = np.percentile(_gp_pos, 99.5)
             _gp_pos_cl = _gp_pos[(_gp_pos >= _lo) & (_gp_pos <= _hi)]
-            _nbins   = 70
-            _bw      = (_hi - _lo) / _nbins
-            _gap     = _bw
-            _bar_x   = _lo - _gap - _bw / 2
-            _bar_w   = _bw
+            _nbins = 70
+            _bw    = (_hi - _lo) / _nbins
+            _bar_x = _lo - _bw - _bw / 2   # left of first bin with one bin-width gap
 
             # Positive histogram
             _gp_fig.add_trace(go.Histogram(
@@ -1077,20 +1075,16 @@ if "mc_results" in st.session_state:
                 name="GP > 0",
             ))
 
-            # Tallest bin height (as probability)
-            _counts, _edges = np.histogram(_gp_pos_cl, bins=_nbins, range=(_lo, _hi))
-            _tallest = float(_counts.max()) / len(_gp_pos_cl)
-
-            # Zero bar: same height as tallest bin, left of first bin with gap
+            # Zero bar at its true probability height
             _gp_fig.add_trace(go.Bar(
-                x=[_bar_x], y=[_tallest],
-                width=[_bar_w],
+                x=[_bar_x], y=[_gp_zero_pct],
+                width=[_bw],
                 marker_color="#f78166", opacity=0.9,
                 marker_line=dict(color="#b84c37", width=0.8),
                 name="Zero carry",
             ))
             _gp_fig.add_annotation(
-                x=_bar_x, y=_tallest,
+                x=_bar_x, y=_gp_zero_pct,
                 text=f"P(GP=0)<br>{_gp_zero_pct*100:.1f}%",
                 showarrow=False,
                 font=dict(size=9, color="#b84c37"),
