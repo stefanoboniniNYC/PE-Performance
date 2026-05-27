@@ -70,7 +70,7 @@ html, body, [class*="css"] { font-family: 'IBM Plex Sans', sans-serif; }
 
 /* ââ section heading ââ */
 .section-hdr {
-  font-size: 16px; font-weight: 700; text-transform: uppercase;
+  font-size: 20px; font-weight: 700; text-transform: uppercase;
   letter-spacing: .12em; color: #0d1117;
   border-bottom: 2px solid #0d1117; padding-bottom: 5px;
   margin: 28px 0 16px;
