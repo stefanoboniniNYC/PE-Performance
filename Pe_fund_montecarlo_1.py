@@ -827,7 +827,7 @@ with col_B:
     with st.container(border=True):
         du_dist, du_params = assumption_widget(
             key="dur", title="Investment Duration (years per deal)", icon="[Dur]",
-            default_dist="Uniform",
+            default_dist="Triangular",
             defaults_by_dist={
                 "Fixed":      {"value": 3.0},
                 "Triangular": {"min": 1.0, "mode": 3.0, "max": 7.0},
@@ -982,7 +982,7 @@ if run_btn or "mc_results" in st.session_state:
              (1.0, "dot", "1.0x", "top left")]),
             use_container_width=True)
 
-    c4, c5 = st.columns(2)
+    c4, c5, c6 = st.columns(3)
     with c4:
         sub = df.sample(min(1500, len(df)))
         mv  = max(float(sub["mkt_mom"].max()), float(sub["lp_mom"].max())) + 0.3
@@ -999,7 +999,13 @@ if run_btn or "mc_results" in st.session_state:
             font=dict(family="IBM Plex Sans"), showlegend=False)
         st.plotly_chart(fig_sc, use_container_width=True)
 
-    with c5:
+     with c5:
+        gp_dist_s = s("total_gp_dist")
+        st.plotly_chart(hist_fig(gp_dist_s, "#f0883e", "GP Distributions (C54)", "$M",
+            [(gp_dist_s.median(), "dash", f"Median ${gp_dist_s.median():.1f}M", "top right")]),
+            use_container_width=True)
+
+    with c6:
         s_mom = np.sort(mom.values)
         cdf   = np.arange(1, len(s_mom)+1) / len(s_mom)
         fig_cdf = go.Figure()
@@ -1084,6 +1090,8 @@ if run_btn or "mc_results" in st.session_state:
         "Mean MIRR Zero (C65)": f"{mirr_zero.mean():.1f}%",
         "Mean MIRR Cal (C66)":  f"{mirr_cal.mean():.1f}%",
         "P(Loss < 1x)":         f"{(mom < 1).mean()*100:.1f}%",
+        "Mean GP Dist (C54)":   f"${s('total_gp_dist').mean():.1f}M",
+        "Median GP Dist (C54)": f"${s('total_gp_dist').median():.1f}M",
     })
     stat_card(s2, "Market Comparison", {
         "% Beats Mkt MoM (C77)":   f"{beats_pct:.1f}%",
