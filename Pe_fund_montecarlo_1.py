@@ -813,8 +813,8 @@ with col_B:
             default_dist="Beta-PERT",
             defaults_by_dist={
                 "Fixed":      {"value": 2.1},
-                "Triangular": {"min": 0.5, "mode": 2.0, "max": 5.5},
-                "Beta-PERT":  {"min": 0.5, "mode": 2.0, "max": 5.5},
+                "Triangular": {"min": 0.5, "mode": 2.0, "max": 6},
+                "Beta-PERT":  {"min": 0, "mode": 2.25, "max": 5.5},
                 "Uniform":    {"min": 0.8, "max": 4.5},
                 "Normal":     {"mean": 2.1, "std": 0.9},
                 "Log-Normal": {"mean": 2.1, "std": 0.9},
@@ -830,7 +830,7 @@ with col_B:
             default_dist="Triangular",
             defaults_by_dist={
                 "Fixed":      {"value": 3.0},
-                "Triangular": {"min": 1.0, "mode": 3.0, "max": 7.0},
+                "Triangular": {"min": 1.0, "mode": 3.0, "max": 6.0},
                 "Beta-PERT":  {"min": 1.0, "mode": 3.0, "max": 7.0},
                 "Uniform":    {"min": 1.0, "max": 5.0},
                 "Normal":     {"mean": 3.5, "std": 1.2},
@@ -851,7 +851,7 @@ with col_B:
                 "Beta-PERT":  {"min": 0.02, "mode": 0.075, "max": 0.15},
                 "Uniform":    {"min": 0.03, "max": 0.13},
                 "Normal":     {"mean": 0.075, "std": 0.025},
-                "Log-Normal": {"mean": 0.075, "std": 0.025},
+                "Log-Normal": {"mean": 0.091, "std": 0.0536, "max":0.22},
                 "Beta":       {"alpha": 3.0, "beta": 5.0, "min": 0.0, "max": 0.20},
             },
             fmt="%.4f", preview_xlabel="Annual return", is_pct=True,
