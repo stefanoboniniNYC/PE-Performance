@@ -70,7 +70,7 @@ html, body, [class*="css"] { font-family: 'IBM Plex Sans', sans-serif; }
 
 /* ââ section heading ââ */
 .section-hdr {
-  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  font-size: 16px; font-weight: 700; text-transform: uppercase;
   letter-spacing: .12em; color: #0d1117;
   border-bottom: 2px solid #0d1117; padding-bottom: 5px;
   margin: 28px 0 16px;
@@ -637,7 +637,7 @@ st.markdown("---")
 # ASSUMPTION CONFIGURATORS - two columns of cards
 # âââââââââââââââââââââââââââââââââââââââââââââ
 
-st.markdown('<div class="section-hdr">Monte Carlo Assumptions</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-hdr">Simulation Assumptions</div>', unsafe_allow_html=True)
 st.caption("Each assumption can be set as a fixed number or sampled from a distribution every simulation. "
            "The mini-chart updates live as you change parameters.")
 
