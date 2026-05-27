@@ -999,7 +999,7 @@ if run_btn or "mc_results" in st.session_state:
             font=dict(family="IBM Plex Sans"), showlegend=False)
         st.plotly_chart(fig_sc, use_container_width=True)
 
-     with c5:
+    with c5:
         gp_dist_s = s("total_gp_dist")
         st.plotly_chart(hist_fig(gp_dist_s, "#f0883e", "GP Distributions (C54)", "$M",
             [(gp_dist_s.median(), "dash", f"Median ${gp_dist_s.median():.1f}M", "top right")]),
