@@ -161,7 +161,7 @@ def sample_dist(dist, params, n):
                 return np.full(n, lo)
             return np.random.uniform(lo, hi, n)
 
-elif dist == "Normal":
+        elif dist == "Normal":
             draws = np.random.normal(params["mean"], max(params["std"], 1e-9), n)
             lo = params.get("min", None)
             hi = params.get("max", None)
@@ -170,7 +170,7 @@ elif dist == "Normal":
                                         hi if hi is not None else  np.inf)
             return draws
 
-     elif dist == "Log-Normal":
+         elif dist == "Log-Normal":
             mu, sd = params["mean"], max(params["std"], 1e-9)
             if mu <= 0:
                 return np.full(n, 0.01)
