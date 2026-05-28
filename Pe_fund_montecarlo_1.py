@@ -162,13 +162,23 @@ def sample_dist(dist, params, n):
             return np.random.uniform(lo, hi, n)
 
         elif dist == "Normal":
-            draws = np.random.normal(params["mean"], max(params["std"], 1e-9), n)
+            mean, sd = params["mean"], max(params["std"], 1e-9)
             lo = params.get("min", None)
             hi = params.get("max", None)
-            if lo is not None or hi is not None:
-                draws = np.clip(draws, lo if lo is not None else -np.inf,
-                                        hi if hi is not None else  np.inf)
-            return draws
+            if lo is None and hi is None:
+                return np.random.normal(mean, sd, n)
+            result = np.empty(n)
+            filled = 0
+            while filled < n:
+                batch = np.random.normal(mean, sd, n - filled)
+                if lo is not None:
+                    batch = batch[batch >= lo]
+                if hi is not None:
+                    batch = batch[batch <= hi]
+                take = min(len(batch), n - filled)
+                result[filled:filled + take] = batch[:take]
+                filled += take
+            return result
 
         elif dist == "Log-Normal":
             mu, sd = params["mean"], max(params["std"], 1e-9)
@@ -176,13 +186,23 @@ def sample_dist(dist, params, n):
                 return np.full(n, 0.01)
             sigma2 = np.log(1 + (sd / mu) ** 2)
             mu_ln = np.log(mu) - sigma2 / 2
-            draws = np.random.lognormal(mu_ln, np.sqrt(sigma2), n)
             lo = params.get("min", None)
             hi = params.get("max", None)
-            if lo is not None or hi is not None:
-                draws = np.clip(draws, lo if lo is not None else -np.inf,
-                                        hi if hi is not None else  np.inf)
-            return draws
+            if lo is None and hi is None:
+                return np.random.lognormal(mu_ln, np.sqrt(sigma2), n)
+            # Rejection sampling: redraw until all values are within bounds
+            result = np.empty(n)
+            filled = 0
+            while filled < n:
+                batch = np.random.lognormal(mu_ln, np.sqrt(sigma2), n - filled)
+                if lo is not None:
+                    batch = batch[batch >= lo]
+                if hi is not None:
+                    batch = batch[batch <= hi]
+                take = min(len(batch), n - filled)
+                result[filled:filled + take] = batch[:take]
+                filled += take
+            return result
 
         elif dist == "Beta":
             a, b = max(params["alpha"], 0.01), max(params["beta"], 0.01)
