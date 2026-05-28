@@ -112,8 +112,8 @@ DIST_PARAMS = {
     "Triangular":      [("min", "Min"), ("mode", "Most Likely"), ("max", "Max")],
     "Beta-PERT":       [("min", "Min"), ("mode", "Most Likely"), ("max", "Max")],
     "Uniform":         [("min", "Min"), ("max", "Max")],
-    "Normal":          [("mean", "Mean"), ("std", "Std Dev")],
-    "Log-Normal":      [("mean", "Mean (arith.)"), ("std", "Std Dev (arith.)")],
+    "Normal":          [("mean", "Mean"), ("std", "Std Dev"), ("min", "Min (truncate)"), ("max", "Max (truncate)")],
+    "Log-Normal":      [("mean", "Mean (arith.)"), ("std", "Std Dev (arith.)"), ("min", "Min (truncate)"), ("max", "Max (truncate)")],
     "Beta":            [("alpha", "Alpha (alpha)"), ("beta", "Beta (beta)"),
                         ("min", "Min (scale lo)"), ("max", "Max (scale hi)")],
     "Custom Discrete": [("v1","Val 1"),("p1","Prob 1"),
@@ -161,16 +161,28 @@ def sample_dist(dist, params, n):
                 return np.full(n, lo)
             return np.random.uniform(lo, hi, n)
 
-        elif dist == "Normal":
-            return np.random.normal(params["mean"], max(params["std"], 1e-9), n)
+elif dist == "Normal":
+            draws = np.random.normal(params["mean"], max(params["std"], 1e-9), n)
+            lo = params.get("min", None)
+            hi = params.get("max", None)
+            if lo is not None or hi is not None:
+                draws = np.clip(draws, lo if lo is not None else -np.inf,
+                                        hi if hi is not None else  np.inf)
+            return draws
 
-        elif dist == "Log-Normal":
+     elif dist == "Log-Normal":
             mu, sd = params["mean"], max(params["std"], 1e-9)
             if mu <= 0:
                 return np.full(n, 0.01)
             sigma2 = np.log(1 + (sd / mu) ** 2)
             mu_ln = np.log(mu) - sigma2 / 2
-            return np.random.lognormal(mu_ln, np.sqrt(sigma2), n)
+            draws = np.random.lognormal(mu_ln, np.sqrt(sigma2), n)
+            lo = params.get("min", None)
+            hi = params.get("max", None)
+            if lo is not None or hi is not None:
+                draws = np.clip(draws, lo if lo is not None else -np.inf,
+                                        hi if hi is not None else  np.inf)
+            return draws
 
         elif dist == "Beta":
             a, b = max(params["alpha"], 0.01), max(params["beta"], 0.01)
