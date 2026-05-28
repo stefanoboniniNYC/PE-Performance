@@ -391,30 +391,26 @@ N_YRS   = 12   # calendar years 0..11
 INV_YRS = 5    # investment period
 
 
-def _irr_vec(cfs, guess=0.10, tol=1e-8, maxiter=200):
-    """
-    Vectorised Newton-Raphson IRR for a batch of cash-flow series.
-    cfs : (S, T) array  -- each row is one simulation's cash-flow stream
-    returns: (S,) array of IRR values (nan where no solution)
-    """
+def _irr_vec(cfs, guess=0.10, tol=1e-8, maxiter=300):
     S, T = cfs.shape
     t_idx = np.arange(T, dtype=float)
-    r = np.full(S, guess)
     valid = (np.any(cfs > 0, axis=1)) & (np.any(cfs < 0, axis=1))
-
+    cf_sum = cfs.sum(axis=1)
+    r = np.where(cf_sum < 0, -0.05, guess)
     for _ in range(maxiter):
-        disc  = (1.0 + r[:, None]) ** t_idx[None, :]        # (S, T)
-        f     = np.sum(cfs / disc,         axis=1)           # (S,)
+        disc  = (1.0 + r[:, None]) ** t_idx[None, :]
+        f     = np.sum(cfs / disc, axis=1)
         df    = -np.sum(t_idx * cfs / (disc * (1.0 + r[:, None])), axis=1)
         safe  = np.abs(df) > 1e-14
-        step  = np.where(safe, f / df, 0.0)
-        r_new = r - step
+        r_new = np.maximum(r - np.where(safe, f / df, 0.0), -0.9999)
         converged = np.abs(r_new - r) < tol
         r = r_new
         if np.all(converged | ~valid):
             break
-
-    result = np.where(valid, r, np.nan)
+    disc_final = (1.0 + r[:, None]) ** t_idx[None, :]
+    npv_check  = np.sum(cfs / disc_final, axis=1)
+    npv_ok     = np.abs(npv_check) < np.maximum(np.abs(cfs).max(axis=1) * 0.001, 1.0)
+    result = np.where(valid & npv_ok & (r > -0.9999) & (r <= 5.0), r, np.nan)
     return result
 
 
@@ -458,7 +454,7 @@ def run_mc(n_sims, assumption_draws, inv_std_pct, seed):
     ip  = np.clip(assumption_draws["inv_pct"],     0.01, 0.99)          # (S,)
     mkt = assumption_draws["mkt"]                                        # (S,)
     # mult and dur: (S, 5) -- one per cohort per sim
-    mult = np.maximum(assumption_draws["mult"].reshape(S, 5), 0.01)     # (S,5)
+    mult = np.maximum(assumption_draws["mult"].reshape(S, 5), 0.0)     # (S,5)
     dur  = np.clip(np.round(
               assumption_draws["dur"].reshape(S, 5)).astype(int), 1, 9) # (S,5)
 
