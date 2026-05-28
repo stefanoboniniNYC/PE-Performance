@@ -843,6 +843,7 @@ with col_A:
             x=_draws, nbinsx=50,
             marker_color="#f0883e", opacity=0.8,
             histnorm="probability density",
+            marker_line=dict(color="#b85e1a", width=0.5),
         ))
         _fig.add_vline(x=_mean_ref, line_dash="dash", line_color="#3fb950",
                        annotation_text=f"Mean ${_mean_ref:.0f}M",
