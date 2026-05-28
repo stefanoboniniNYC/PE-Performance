@@ -1233,7 +1233,7 @@ if "mc_results" in st.session_state:
         "Multiplier dist":      mu_dist,
         "Duration dist":        du_dist,
     })
-st.markdown("---")
+    st.markdown("---")
     csv = df.to_csv(index=False).encode("utf-8")
     st.download_button(
         label="Download raw simulation data (CSV)",
@@ -1242,6 +1242,7 @@ st.markdown("---")
         mime="text/csv",
         type="primary",
     )
+    
     st.markdown("---")
     st.markdown(
         "<p style='font-size:11px;color:#8c959f'>"
