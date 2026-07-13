@@ -706,7 +706,7 @@ st.markdown("""
     Private Equity Returns Simulator 
   </h1>
   <p style="color:#dce7f2;margin:6px 0 0;font-size:14px;">
-    This simulator builds on the paper <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=1571249" target="_blank" style="color:#a2e8e5;text-decoration:underline;">"Private Equity Returns: Estimates from 50 Million Funds"</a> by Stefano Bonini | Every assumption configurable as Fixed or stochastic
+    This simulator builds on the paper <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=7109238" target="_blank" style="color:#a2e8e5;text-decoration:underline;">"Private Equity Returns: Estimates from 50 Million Funds"</a> by Stefano Bonini | Every assumption configurable as Fixed or stochastic
   </p>
 </div>
 """, unsafe_allow_html=True)
